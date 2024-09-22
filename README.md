@@ -17,7 +17,7 @@ Para isolar as dependências do projeto, crie um ambiente virtual utilizando _ve
 
 Com o ambiente virtual ativado, instale as bibliotecas requeridas usando _pip_: `pip install opencv-python numpy`
 
-### Uso da Aplicação
+### Execução da Aplicação
 
 Para utilizar o PixelAreaNormalizer, você deve executar o script através do terminal, passando os caminhos das imagens e as áreas correspondentes em km².
 
