@@ -5,7 +5,10 @@ import argparse
 import logging
 
 def configurar_logs():
-    # Configura o sistema de logging para registrar eventos e erros em um arquivo.
+    """
+    Configura o sistema de logging para registrar eventos e erros em um arquivo.
+    O arquivo de log será chamado 'processamento_imagens.log'.
+    """
     logging.basicConfig(
         filename='processamento_imagens.log',  # Nome do arquivo onde os logs serão armazenados.
         level=logging.DEBUG,  # Define o nível de logging; DEBUG para registrar tudo.
@@ -63,6 +66,25 @@ def soma_ponderada_intensidades(imagem, area_normalizada):
     intensidades = np.sum(imagem_cinza)  # Calcula a soma das intensidades de pixels.
     return intensidades * area_normalizada  # Retorna a soma ponderada.
 
+def registra_processamento(resultados, caminho_imagem, soma_ponderada=None, area_por_pixel=None, area_normalizada=None, erro_processamento=None):
+    """
+    Registra os resultados do processamento de cada imagem em uma lista.
+    
+    :param resultados: Lista onde os resultados serão armazenados.
+    :param caminho_imagem: Caminho da imagem processada.
+    :param soma_ponderada: Soma ponderada das intensidades da imagem.
+    :param area_por_pixel: Área por pixel calculada.
+    :param area_normalizada: Área normalizada calculada.
+    :param erro_processamento: Mensagem de erro, se houver.
+    """
+    resultados.append({
+        'erro_processamento': erro_processamento,
+        'caminho_imagem': caminho_imagem,
+        'soma_ponderada': soma_ponderada,
+        'area_por_pixel': area_por_pixel,
+        'area_normalizada': area_normalizada
+    })
+
 def main(imagens, areas_km2):
     """
     Função principal que processa as imagens e calcula a soma ponderada das intensidades.
@@ -74,13 +96,13 @@ def main(imagens, areas_km2):
     if not imagens:
         logging.error("Erro: Nenhuma imagem foi fornecida.")  # Loga erro se nenhuma imagem for fornecida.
         return {}
-
+    
     if len(imagens) != len(areas_km2):
         logging.error("Erro: O número de imagens deve ser igual ao número de áreas.")  # Loga erro se o número de imagens não corresponder.
         return {}
 
     areas_por_pixel = []  # Lista para armazenar áreas por pixel.
-    resultados = {}  # Dicionário para armazenar os resultados.
+    resultados = []  # Lista para armazenar os resultados.
 
     # Ler cada imagem e calcular áreas por pixel
     for i, caminho_imagem in enumerate(imagens):
@@ -106,38 +128,42 @@ def main(imagens, areas_km2):
 
     # Calcula a soma ponderada das intensidades para cada imagem
     for i, caminho_imagem in enumerate(imagens):
-        imagem = ler_imagem(caminho_imagem)
+        try:
+            imagem = ler_imagem(caminho_imagem)
 
-        if imagem is None:
-            continue
-        
-        soma_ponderada = soma_ponderada_intensidades(imagem, areas_normalizadas[i])  # Calcula soma ponderada.
+            if imagem is None:
+                registra_processamento(resultados, caminho_imagem, erro_processamento="Erro ao carregar imagem.")
+                continue
+            soma_ponderada = soma_ponderada_intensidades(imagem, areas_normalizadas[i])  # Calcula soma ponderada.
 
-        # Armazena os resultados
-        resultados[caminho_imagem] = {
-            'caminho_imagem': caminho_imagem,
-            'soma_ponderada': soma_ponderada,
-            'area_por_pixel': areas_por_pixel[i],
-            'area_normalizada': areas_normalizadas[i]
-        }
-        
-        logging.info(f"Soma ponderada para {caminho_imagem}: {soma_ponderada}")  # Loga a soma ponderada.
+            # Armazena os resultados
+            registra_processamento(resultados, caminho_imagem, soma_ponderada, areas_por_pixel[i], areas_normalizadas[i])
+            
+            logging.info(f"Soma ponderada para {caminho_imagem}: {soma_ponderada}")  # Loga a soma ponderada.
+        except Exception as e:
+            message = str(e)  # Captura a mensagem da exceção.
+            registra_processamento(resultados, caminho_imagem, erro_processamento=message)  # Registra o erro.
+            logging.error(message)  # Loga a mensagem de erro.
 
     return resultados  # Retorna os resultados.
 
 if __name__ == "__main__":
-    configurar_logs()  # Configura o sistema de logs.
+    configurar_logs()
     
-    # Configura o parser de argumentos para receber entradas pela linha de comando.
     parser = argparse.ArgumentParser(description="Processar imagens e calcular soma ponderada das intensidades.")
-    parser.add_argument('imagens', nargs='+', help='Caminhos completos das imagens a serem processadas.')
-    parser.add_argument('areas_km2', nargs='+', type=float, help='Áreas estimadas em km² para cada imagem.')
+    parser.add_argument('--imagens', nargs='+', help='Caminhos completos das imagens a serem processadas.')
+    parser.add_argument('--areas_km', nargs='+', type=float, help='Áreas estimadas em km² para cada imagem.')
 
-    args = parser.parse_args()  # Faz o parse dos argumentos da linha de comando.
+    args = parser.parse_args()
 
-    resultados = main(args.imagens, args.areas_km2)  # Chama a função principal com os argumentos fornecidos.
-    if resultados:
-        logging.info(f"Resultados: {resultados}")  # Loga os resultados se houver.
-        print(resultados)  # Imprime os resultados.
+    # Verifica se os parâmetros foram passados corretamente
+    if args.imagens and args.areas_km and len(args.imagens) == len(args.areas_km):
+        resultados = main(args.imagens, args.areas_km)
+        if resultados:
+            logging.info(f"Resultados: {resultados}")
+            print(resultados)
+        else:
+            print([])
     else:
-        print({})  # Imprime um dicionário vazio se não houver resultados.
+        logging.error("Erro: O número de imagens deve ser igual ao número de áreas.")
+        print([])
