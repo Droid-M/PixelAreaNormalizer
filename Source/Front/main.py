@@ -121,7 +121,7 @@ def criar_interface(resultados, root):
     extrai_resultados(resultados)
 
     # Remova a criação de uma nova instância de Tk
-    root.title("Representações Gráficas")
+    root.title("Projeto PixelAreaNormalizer")
     
     # Adiciona botão para carregar imagens
     tk.Button(root, text="Selecionar imagens", command=lambda: selecionar_outras_imagens()).pack(pady=20)
