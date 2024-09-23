@@ -54,7 +54,7 @@ def ler_imagem(caminho_imagem):
     return cv2.imread(caminho_imagem)  # Lê a imagem usando OpenCV.
 
 # Função para calcular a soma ponderada das intensidades da imagem
-def soma_ponderada_intensidades(imagem, area_normalizada):
+def soma_ponderada_intensidades(imagem_cinza, area_normalizada):
     """
     Calcula a soma ponderada das intensidades da imagem em níveis de cinza.
     
@@ -62,11 +62,10 @@ def soma_ponderada_intensidades(imagem, area_normalizada):
     :param area_normalizada: A área normalizada correspondente à imagem.
     :return: Soma ponderada das intensidades.
     """
-    imagem_cinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)  # Converte a imagem para escala de cinza.
     intensidades = np.sum(imagem_cinza)  # Calcula a soma das intensidades de pixels.
     return intensidades * area_normalizada  # Retorna a soma ponderada.
 
-def registra_processamento(resultados, caminho_imagem, soma_ponderada=None, area_por_pixel=None, area_normalizada=None, erro_processamento=None):
+def registra_processamento(resultados, caminho_imagem, soma_ponderada=None, area_por_pixel=None, area_normalizada=None, histograma=None, erro_processamento=None):
     """
     Registra os resultados do processamento de cada imagem em uma lista.
     
@@ -82,8 +81,19 @@ def registra_processamento(resultados, caminho_imagem, soma_ponderada=None, area
         'caminho_imagem': caminho_imagem,
         'soma_ponderada': soma_ponderada,
         'area_por_pixel': area_por_pixel,
-        'area_normalizada': area_normalizada
+        'area_normalizada': area_normalizada,
+        'histograma': histograma
     })
+    
+def calcular_histograma(imagem_cinza):
+    """
+    Calcula o histograma das intensidades de pixels de uma imagem em escala de cinza.
+    
+    :param imagem: A imagem em escala de cinza.
+    :return: Frequências das intensidades de 0 a 255.
+    """
+    histograma, _ = np.histogram(imagem_cinza, bins=np.arange(257))  # Cria histogramas com 256 bins.
+    return histograma
 
 def main(imagens, areas_km2):
     """
@@ -134,10 +144,14 @@ def main(imagens, areas_km2):
             if imagem is None:
                 registra_processamento(resultados, caminho_imagem, erro_processamento="Erro ao carregar imagem.")
                 continue
-            soma_ponderada = soma_ponderada_intensidades(imagem, areas_normalizadas[i])  # Calcula soma ponderada.
+            
+            imagem_cinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)  # Converte a imagem para escala de cinza.
+            soma_ponderada = soma_ponderada_intensidades(imagem_cinza, areas_normalizadas[i])  # Calcula soma ponderada.
+            
+            histograma = calcular_histograma(imagem_cinza)
 
             # Armazena os resultados
-            registra_processamento(resultados, caminho_imagem, soma_ponderada, areas_por_pixel[i], areas_normalizadas[i])
+            registra_processamento(resultados, caminho_imagem, soma_ponderada, areas_por_pixel[i], areas_normalizadas[i], histograma)
             
             logging.info(f"Soma ponderada para {caminho_imagem}: {soma_ponderada}")  # Loga a soma ponderada.
         except Exception as e:
