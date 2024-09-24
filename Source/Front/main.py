@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
+from PIL import Image, ImageTk  # Necessário para manipulação de imagens
 import matplotlib.pyplot as plt
 import os, sys
 import numpy as np
@@ -76,7 +77,7 @@ import sys  # Importa o módulo sys
 # Funções para criar gráficos (omitidas para brevidade)
 
 # Função principal da interface
-def criar_interface(resultados, root):
+def criar_interface(resultados, root, frame_preview):
     somas_ponderadas = []
     caminhos_imagens = []
     areas_por_pixel = []
@@ -98,7 +99,7 @@ def criar_interface(resultados, root):
                 histogramas.append(resultado['histograma'])
     
     def selecionar_outras_imagens():
-        novos_resultados = selecionar_imagens()
+        novos_resultados = selecionar_outras_imagens_e_prever(frame_preview)
         extrai_resultados(novos_resultados)
             
     def on_soma_ponderada():
@@ -132,16 +133,16 @@ def criar_interface(resultados, root):
 
     # Botões para abrir cada representação
     tk.Button(root, text="Ver histogramas", command=on_histograma).pack(pady=10)
-    tk.Button(root, text="Ver soma ponderadas", command=on_soma_ponderada).pack(pady=10)
+    tk.Button(root, text="Ver somas ponderadas", command=on_soma_ponderada).pack(pady=10)
     tk.Button(root, text="Ver áreas por pixel", command=on_area_por_pixel).pack(pady=10)
-    tk.Button(root, text="Ver áreas Normalizadas", command=on_area_normalizada).pack(pady=10)
+    tk.Button(root, text="Ver áreas normalizadas", command=on_area_normalizada).pack(pady=10)
     
     # Adiciona um separador com Canvas
     separator = tk.Canvas(root, height=2, bg="black")  # Define a altura e a cor da linha
     separator.pack(fill=tk.X, padx=5, pady=10)  # Preenche a largura da janela
     
     # Adiciona botão para sair da aplicação
-    tk.Button(root, text="Sair", command=root.destroy).pack(pady=50)
+    tk.Button(root, text="Sair", command=root.destroy).pack(pady=30)
 
     root.deiconify()  # Mostra a janela principal
 
@@ -184,6 +185,40 @@ def selecionar_imagens():
     
     return resultados
 
+# Função para criar miniaturas
+def criar_miniaturas(caminhos_imagens, frame_preview):
+    for widget in frame_preview.winfo_children():
+        widget.destroy()  # Limpa as pré-visualizações anteriores
+
+    for caminho in caminhos_imagens:
+        # Cria um frame para agrupar a miniatura e o nome
+        frame_imagem = tk.Frame(frame_preview)
+
+        # Carrega a imagem e cria uma miniatura
+        img = Image.open(caminho)
+        img.thumbnail((100, 100))  # Define o tamanho da miniatura
+        img_tk = ImageTk.PhotoImage(img)
+
+        # Cria um rótulo para a miniatura
+        label_imagem = tk.Label(frame_imagem, image=img_tk)
+        label_imagem.image = img_tk  # Mantém a referência da imagem
+        label_imagem.pack()
+
+        # Cria um rótulo para o caminho ou nome da imagem
+        nome_imagem = os.path.basename(caminho)  # Pega apenas o nome do arquivo
+        label_nome = tk.Label(frame_imagem, text=nome_imagem, wraplength=100)
+        label_nome.pack()
+
+        # Posiciona o frame com a miniatura e o nome
+        frame_imagem.pack(side=tk.LEFT, padx=5, pady=5)
+
+# Função para selecionar imagens e exibir miniaturas
+def selecionar_outras_imagens_e_prever(frame_preview):
+    resultados = selecionar_imagens()
+    if resultados:
+        criar_miniaturas([r['caminho_imagem'] for r in resultados], frame_preview)
+    return resultados
+
 # Inicializa a interface gráfica
 if __name__ == "__main__":
     configurar_logs()
@@ -191,7 +226,7 @@ if __name__ == "__main__":
     root.withdraw()  # Esconde a janela principal
     
     root.title("Selecionar Imagens")  # Defina um título para a janela
-    root.geometry("800x600")  # Define o tamanho da janela
+    root.geometry("800x900")  # Define o tamanho da janela
     root.update_idletasks()  # Atualiza as tarefas pendentes
 
     # Centraliza a janela
@@ -204,8 +239,12 @@ if __name__ == "__main__":
     root.geometry(f"{width}x{height}+{x}+{y}")
     
     try:
-        resultados = selecionar_imagens()
-        criar_interface(resultados, root)
+        # Frame para a visualização das miniaturas
+        frame_preview = tk.Frame(root)
+        frame_preview.pack(pady=10)
+        
+        resultados = selecionar_outras_imagens_e_prever(frame_preview)
+        criar_interface(resultados, root, frame_preview)
     except Exception as e:
         print(f"Ocorreu um erro: {e}")
     finally:
