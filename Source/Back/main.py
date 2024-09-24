@@ -77,12 +77,12 @@ def registra_processamento(resultados, caminho_imagem, soma_ponderada=None, area
     :param erro_processamento: Mensagem de erro, se houver.
     """
     resultados.append({
-        'erro_processamento': erro_processamento,
-        'caminho_imagem': caminho_imagem,
-        'soma_ponderada': soma_ponderada,
-        'area_por_pixel': area_por_pixel,
-        'area_normalizada': area_normalizada,
-        'histograma': histograma
+        "erro_processamento": erro_processamento,
+        "caminho_imagem": caminho_imagem,
+        "soma_ponderada": float(soma_ponderada),
+        "area_por_pixel": float(area_por_pixel),
+        "area_normalizada": float(area_normalizada),
+        "histograma": histograma
     })
     
 def calcular_histograma(imagem_cinza):
@@ -151,7 +151,7 @@ def main(imagens, areas_km2):
             histograma = calcular_histograma(imagem_cinza)
 
             # Armazena os resultados
-            registra_processamento(resultados, caminho_imagem, soma_ponderada, areas_por_pixel[i], areas_normalizadas[i], histograma)
+            registra_processamento(resultados, caminho_imagem, soma_ponderada, areas_por_pixel[i], areas_normalizadas[i], histograma.tolist())
             
             logging.info(f"Soma ponderada para {caminho_imagem}: {soma_ponderada}")  # Loga a soma ponderada.
         except Exception as e:

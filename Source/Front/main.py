@@ -4,12 +4,20 @@ from PIL import Image, ImageTk  # Necessário para manipulação de imagens
 import matplotlib.pyplot as plt
 import os, sys
 import numpy as np
+import subprocess
+import json
+import logging
 
-# Adiciona o diretório pai ao caminho
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Agora faça a importação
-from Back.main import main, logging, configurar_logs  # Ajuste a importação para refletir a nova estrutura
+def configurar_logs():
+    """
+    Configura o sistema de logging para registrar eventos e erros em um arquivo.
+    O arquivo de log será chamado 'processamento_imagens.log'.
+    """
+    logging.basicConfig(
+        filename='processamento_imagens.log',  # Nome do arquivo onde os logs serão armazenados.
+        level=logging.DEBUG,  # Define o nível de logging; DEBUG para registrar tudo.
+        format='%(asctime)s - %(levelname)s - %(message)s'  # Formato das mensagens de log.
+    )
 
 # Função para criar uma nova janela para o histograma
 def mostrar_histogramas(histogramas, caminhos_imagens):
@@ -147,6 +155,56 @@ def criar_interface(resultados, root, frame_preview):
     root.deiconify()  # Mostra a janela principal
 
     root.mainloop()
+    
+def gerar_comando_consulta(caminhos_imagens, dimensoes):
+    """
+    Esta função gera um comando de consulta com base nos caminhos das imagens e dimensões fornecidos.
+    
+    Args:
+        caminhos_imagens (list): Lista de caminhos das imagens.
+        dimensoes (list): Lista de dimensões das áreas em quilômetros.
+        
+    Returns:
+        str: Comando de consulta formatado para ser executado.
+    """
+    imagens_str = ' '.join(caminhos_imagens)
+    dimensoes_str = ' '.join(map(str, dimensoes))
+    
+    return f"python3 ./Source/Back/main.py --imagens {imagens_str} --areas_km {dimensoes_str}"
+    
+# Recupera resultados com base em caminhos e dimensões da imagem
+def obter_resultados(caminhos_imagens, dimensoes):
+    comando = gerar_comando_consulta(caminhos_imagens, dimensoes)
+    
+    hasError = False
+    resultado = []
+    
+    try:
+        # Executa o comando e captura a saída
+        saida = subprocess.run(comando, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        logging.info(f"Saída do comando: {comando}\n{saida.stdout}")
+        resultado = saida.stdout
+        hasError = saida.stderr or not resultado    
+        
+        # Substituindo aspas simples por aspas duplas e corrigindo None para null
+        resultado = resultado.replace("None", "null").replace("'", '"')
+        
+        print(json.loads(resultado))
+        
+        # Converte a representação de string de um dicionário em um dicionário Python usando json.loads
+        resultado = json.loads(resultado)
+        
+        logging.info(f"Resultados obtidos: {resultado}")
+    except Exception as e:
+        hasError = True
+        logging.error(f"Exceção ao executar o comando: {comando}\n{e}")
+    
+    if hasError:
+        logging.error(f"Erro ao executar o comando: {comando}")
+        return []
+    
+    # return main(caminhos_imagens, dimensoes)
+    return resultado
 
 # Função para selecionar imagens e coletar dimensões
 def selecionar_imagens():
@@ -177,11 +235,11 @@ def selecionar_imagens():
     logging.debug("Caminhos das Imagens: %s", list(caminhos_imagens))
     logging.debug("Dimensões em km²: %s", dimensoes)
     
-    resultados = main(caminhos_imagens, dimensoes)
+    resultados = obter_resultados(caminhos_imagens, dimensoes)
     
     logging.info("Resultados: %s", resultados)
     
-    print(resultados)
+    # print(resultados)
     
     return resultados
 
@@ -222,6 +280,7 @@ def selecionar_outras_imagens_e_prever(frame_preview):
 # Inicializa a interface gráfica
 if __name__ == "__main__":
     configurar_logs()
+    
     root = tk.Tk()
     root.withdraw()  # Esconde a janela principal
     
