@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog, simpledialog, messagebox
+from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk  # Necessário para manipulação de imagens
 import matplotlib.pyplot as plt
 import os, sys
@@ -7,6 +7,7 @@ import numpy as np
 import subprocess
 import json
 import logging
+
 
 def configurar_logs():
     """
@@ -77,12 +78,59 @@ def mostrar_areas_normalizadas(area_normalizada, caminhos_imagens):
     plt.tight_layout()  # Ajusta o layout
     plt.show()
 
-import tkinter as tk
-from tkinter import filedialog, simpledialog, messagebox
-import matplotlib.pyplot as plt
-import sys  # Importa o módulo sys
-
 # Funções para criar gráficos (omitidas para brevidade)
+
+def pedir_dimensao_imagem(caminho):
+    """
+    Função para criar uma janela de diálogo que pede a dimensão da imagem,
+    exibindo a pré-visualização da imagem.
+
+    Args:
+        caminho (str): Caminho da imagem.
+
+    Returns:
+        float: Dimensão informada pelo usuário em km² ou None se cancelado.
+    """
+    # Cria uma nova janela
+    dialogo = tk.Toplevel()
+    dialogo.title("Dimensão da Imagem")
+    
+    dimensao_resultado = [None] # Para capturar o resultado
+    
+    # Carrega e exibe a imagem
+    img = Image.open(caminho)
+    img.thumbnail((300, 300))  # Tamanho máximo da pré-visualização
+    img_tk = ImageTk.PhotoImage(img)
+    
+    label_imagem = tk.Label(dialogo, image=img_tk)
+    label_imagem.image = img_tk  # Mantém a referência da imagem
+    label_imagem.pack()
+
+    # Campo de entrada para a dimensão
+    label_dimensao = tk.Label(dialogo, text="Informe a dimensão em km² da imagem:")
+    label_dimensao.pack(pady=5)
+    entry_dimensao = tk.Entry(dialogo)
+    entry_dimensao.pack(pady=5)
+
+    # Função para fechar o diálogo e retornar o valor
+    def confirmar():
+        try:
+            dimensao = float(entry_dimensao.get())
+            dimensao_resultado[0] = float(entry_dimensao.get())
+            dialogo.destroy()  # Fecha a janela
+            return dimensao
+        except ValueError:
+            messagebox.showerror("Erro", "Por favor, insira um número válido.")
+    
+    # Botão para confirmar a entrada
+    button_confirmar = tk.Button(dialogo, text="Confirmar", command=confirmar)
+    button_confirmar.pack(pady=10)
+
+    # Aguarda o fechamento da janela
+    dialogo.wait_window(dialogo)
+    
+    # Retorna a dimensão informada, ou None se a janela foi fechada
+    return dimensao_resultado[0]
 
 # Função principal da interface
 def criar_interface(resultados, root, frame_preview):
@@ -225,9 +273,9 @@ def selecionar_imagens():
 
     dimensoes = []
     for caminho in caminhos_imagens:
-        dimensao = simpledialog.askfloat("Dimensão da Imagem", f"Informe a dimensão em km² da imagem:\n{caminho}")
+        dimensao = pedir_dimensao_imagem(caminho)
         if dimensao is not None:
-            dimensoes.append(dimensao)
+            dimensoes.append(float(dimensao))
         else:
             messagebox.showwarning("Aviso", "Dimensão não informada. Operação cancelada!")
             return
@@ -305,6 +353,7 @@ if __name__ == "__main__":
         resultados = selecionar_outras_imagens_e_prever(frame_preview)
         criar_interface(resultados, root, frame_preview)
     except Exception as e:
+        raise e
         print(f"Ocorreu um erro: {e}")
     finally:
         try:
