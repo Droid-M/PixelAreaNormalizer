@@ -19,4 +19,12 @@ source "$ENV_NAME/bin/activate"
 pip install -r requirements.txt
 
 # Executa o script Python
-python3 Source/Front/main.py
+echo "Executando o script executa_programa.sh..."
+./executa_programa.sh
+
+# Verifique se a execução foi bem-sucedida
+if [ $? -eq 0 ]; then
+    echo "O script executa_programa.sh foi executado com sucesso."
+else
+    echo "Houve um erro ao executar o script executa_programa.sh."
+fi

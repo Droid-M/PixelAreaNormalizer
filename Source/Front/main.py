@@ -218,7 +218,7 @@ def gerar_comando_consulta(caminhos_imagens, dimensoes):
     imagens_str = ' '.join(caminhos_imagens)
     dimensoes_str = ' '.join(map(str, dimensoes))
     
-    return f"python3 ./Source/Back/main.py --imagens {imagens_str} --areas_km {dimensoes_str}"
+    return f"python3 ./Source/Back/pixerizador.py --imagens {imagens_str} --areas_km {dimensoes_str}"
     
 # Recupera resultados com base em caminhos e dimensões da imagem
 def obter_resultados(caminhos_imagens, dimensoes):

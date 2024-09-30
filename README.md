@@ -21,10 +21,10 @@ Com o ambiente virtual ativado, instale as bibliotecas requeridas usando _pip_: 
 
 Para utilizar o PixelAreaNormalizer, você deve executar o script através do terminal, passando os caminhos das imagens e as áreas correspondentes em km².
 
-A sintaxe deve obedecer o padrão: `python main.py --imagens <caminho_da_imagem_1> <caminho_da_imagem_2> ... --areas_km <area_km1> <area_km2> …`
+A sintaxe deve obedecer o padrão: `python pixerizador.py --imagens <caminho_da_imagem_1> <caminho_da_imagem_2> ... --areas_km <area_km1> <area_km2> …`
 
 Por exemplo, para processar duas imagens (`Assets/1.png` e `Assets/2.png`) com áreas de 10 km² e 20 km², execute:  
-`python main.py --imagens Assets/1.png Assets/2.png --areas_km 10 20`
+`python pixerizador.py --imagens Assets/1.png Assets/2.png --areas_km 10 20`
 
 ### Observações
 
