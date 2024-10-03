@@ -2,19 +2,9 @@ import cv2
 import numpy as np
 import os
 import argparse
-import logging
-
-def configurar_logs():
-    """
-    Configura o sistema de logging para registrar eventos e erros em um arquivo.
-    O arquivo de log será chamado 'processamento_imagens.log'.
-    """
-    logging.basicConfig(
-        filename='processamento_imagens.log',  # Nome do arquivo onde os logs serão armazenados.
-        level=logging.DEBUG,  # Define o nível de logging; DEBUG para registrar tudo.
-        format='%(asctime)s - %(levelname)s - %(message)s'  # Formato das mensagens de log.
-    )
-
+import estimador_area
+from logger import logging, configurar_logs
+    
 # Função para calcular a área representada por cada pixel
 def calcular_area_por_pixel(area_km2, altura, largura):
     """
@@ -56,16 +46,24 @@ def ler_imagem(caminho_imagem):
 # Função para calcular a soma ponderada das intensidades da imagem
 def soma_ponderada_intensidades(imagem_cinza, area_normalizada):
     """
-    Calcula a soma ponderada das intensidades da imagem em níveis de cinza.
+    Calcula a soma ponderada das intensidades da imagem em níveis de cinza,
+    considerando apenas os pixels claros (acima de um limiar) e conta os pixels claros.
     
-    :param imagem: A imagem a ser processada.
+    :param imagem_cinza: A imagem em escala de cinza a ser processada.
     :param area_normalizada: A área normalizada correspondente à imagem.
-    :return: Soma ponderada das intensidades.
+    
+    :return: Soma ponderada das intensidades dos pixels claros e a contagem de pixels claros.
     """
-    intensidades = np.sum(imagem_cinza)  # Calcula a soma das intensidades de pixels.
-    return intensidades * area_normalizada  # Retorna a soma ponderada.
+    limiar = 200  # Define um limiar para considerar apenas pixels claros
+    pixels_claros = imagem_cinza[imagem_cinza > limiar]  # Filtra os pixels claros
+    
+    contagem_pixels_claros = pixels_claros.size  # Conta os pixels claros
+    intensidades = np.sum(pixels_claros)  # Calcula a soma das intensidades dos pixels claros
+    soma_ponderada = intensidades * area_normalizada  # Retorna a soma ponderada.
+    
+    return soma_ponderada, contagem_pixels_claros  # Retorna a soma ponderada e a contagem de pixels claros.
 
-def registra_processamento(resultados, caminho_imagem, soma_ponderada=None, area_por_pixel=None, area_normalizada=None, histograma=None, erro_processamento=None):
+def registra_processamento(resultados, caminho_imagem, soma_ponderada=None, area_por_pixel=None, area_normalizada=None, histograma=None, contagem_pixels_claros=None, erro_processamento=None):
     """
     Registra os resultados do processamento de cada imagem em uma lista.
     
@@ -82,7 +80,8 @@ def registra_processamento(resultados, caminho_imagem, soma_ponderada=None, area
         "soma_ponderada": float(soma_ponderada),
         "area_por_pixel": float(area_por_pixel),
         "area_normalizada": float(area_normalizada),
-        "histograma": histograma
+        "histograma": histograma,
+        "contagem_pixels_claros": contagem_pixels_claros
     })
     
 def calcular_histograma(imagem_cinza):
@@ -116,6 +115,8 @@ def main(imagens, areas_km2):
 
     # Ler cada imagem e calcular áreas por pixel
     for i, caminho_imagem in enumerate(imagens):
+        if areas_km2[i] is None:
+            areas_km2[i] = estimador_area.estimar_area(caminho_imagem, 1, 1)
         if areas_km2[i] < 0:
             logging.error(f"Erro: Área negativa fornecida para {caminho_imagem}.")  # Loga erro se a área for negativa.
             continue
@@ -146,12 +147,12 @@ def main(imagens, areas_km2):
                 continue
             
             imagem_cinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)  # Converte a imagem para escala de cinza.
-            soma_ponderada = soma_ponderada_intensidades(imagem_cinza, areas_normalizadas[i])  # Calcula soma ponderada.
+            soma_ponderada, contagem_pixels_claros = soma_ponderada_intensidades(imagem_cinza, areas_normalizadas[i])  # Calcula soma ponderada.
             
             histograma = calcular_histograma(imagem_cinza)
 
             # Armazena os resultados
-            registra_processamento(resultados, caminho_imagem, soma_ponderada, areas_por_pixel[i], areas_normalizadas[i], histograma.tolist())
+            registra_processamento(resultados, caminho_imagem, soma_ponderada, areas_por_pixel[i], areas_normalizadas[i], histograma.tolist(), contagem_pixels_claros)
             
             logging.info(f"Soma ponderada para {caminho_imagem}: {soma_ponderada}")  # Loga a soma ponderada.
         except Exception as e:
@@ -167,6 +168,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Processar imagens e calcular soma ponderada das intensidades.")
     parser.add_argument('--imagens', nargs='+', help='Caminhos completos das imagens a serem processadas.')
     parser.add_argument('--areas_km', nargs='+', type=float, help='Áreas estimadas em km² para cada imagem.')
+    parser.add_argument('--limiar', type=int, default=200, help='Limiar para considerar pixels claros.')
 
     args = parser.parse_args()
 
