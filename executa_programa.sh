@@ -35,4 +35,4 @@ else
 fi
 
 # Executa o script Python
-python3 main.py
+python3 Source/main.py

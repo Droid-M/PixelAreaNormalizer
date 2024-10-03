@@ -32,7 +32,7 @@ def renderizar_graficos(lista_de_valores, num_barras, caminhos_imagens, titulo_g
             f'{barra.get_height():.2f}',             # Formata o valor com duas casas decimais
             ha='center',                              # Alinha horizontalmente ao centro
             va='center',                              # Alinha verticalmente ao centro
-            color='white'                            # Cor do texto (branco)
+            color='black'                            # Cor do texto (branco)
         )
         
     plt.title(titulo_grafico)
@@ -137,7 +137,7 @@ def seletor_de_imagens():
     )
     if not caminhos_imagens:
         messagebox.showinfo("Informação", "Nenhuma imagem selecionada.")
-        return
+        return None, None
 
     dimensoes = []
     for caminho in caminhos_imagens:
@@ -146,7 +146,7 @@ def seletor_de_imagens():
             dimensoes.append(float(dimensao))
         else:
             messagebox.showwarning("Aviso", "Dimensão não informada. Operação cancelada!")
-            return
+            return None, None
 
     logging.debug("Caminhos das Imagens: %s", list(caminhos_imagens))
     logging.debug("Dimensões em km²: %s", dimensoes)

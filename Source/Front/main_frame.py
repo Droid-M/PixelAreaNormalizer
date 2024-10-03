@@ -158,9 +158,9 @@ def criar_miniaturas(caminhos_imagens, frame_preview):
 # Função para selecionar imagens e exibir miniaturas
 def selecionar_outras_imagens_e_prever(frame_preview):
     caminhos_imagens, dimensoes = el.seletor_de_imagens()
-    resultados = obter_resultados(caminhos_imagens, dimensoes)
-    
-    logging.info("Resultados: %s", resultados)
-    if resultados:
-        criar_miniaturas([r['caminho_imagem'] for r in resultados], frame_preview)
-    return resultados
+    if caminhos_imagens is not None and dimensoes is not None:
+        resultados = obter_resultados(caminhos_imagens, dimensoes)
+        logging.info("Resultados: %s", resultados)
+        if resultados:
+            criar_miniaturas([r['caminho_imagem'] for r in resultados], frame_preview)
+        return resultados
