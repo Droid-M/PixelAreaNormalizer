@@ -44,20 +44,23 @@ def renderizar_graficos(lista_de_valores, num_barras, caminhos_imagens, titulo_g
 # Função para criar uma nova janela para o histograma
 def mostrar_histogramas(histogramas, caminhos_imagens):
     plt.figure(figsize=(10, 5))
-    for i, histograma in enumerate(histogramas):
-        plt.subplot(len(histogramas), 1, i + 1)  # Cria subplots para cada histograma
-        plt.bar(range(256), histograma, color='gray', alpha=0.7)
-        plt.title(f'Histograma de intensidades - {caminhos_imagens[i]}')
-        plt.xlabel('Intensidade do Pixel')
-        plt.ylabel('Frequência')
-        plt.xlim([0, 255])
-        
-    plt.tight_layout()  # Ajusta o layout
-    plt.show()  # Exibe todos os histogramas de uma v
+    histogramo_agregado = [0] * 256
+
+    # Soma os histogramas
+    for histograma in histogramas:
+        histogramo_agregado = [x + y for x, y in zip(histogramo_agregado, histograma)]
+
+    plt.bar(range(256), histogramo_agregado, color='gray', alpha=0.7)
+    plt.title('Histograma Agregado de Intensidades')
+    plt.xlabel('Intensidade do Pixel')
+    plt.ylabel('Frequência Total')
+    plt.xlim([0, 255])
+    plt.tight_layout()
+    plt.show()
 
 # Função para criar uma nova janela para a soma ponderada
 def mostrar_soma_ponderada(somas_ponderadas, caminhos_imagens):
-    renderizar_graficos(somas_ponderadas, len(somas_ponderadas), caminhos_imagens, 'Somas ponderadas', 'Soma ponderada')
+    renderizar_graficos(somas_ponderadas, len(somas_ponderadas), caminhos_imagens, 'Somas ponderadas (Consumo de energia)', 'Soma ponderada')
 
 # Função para criar uma nova janela para a área por pixel
 def mostrar_areas_por_pixel(areas_por_pixel, caminhos_imagens):
@@ -152,3 +155,24 @@ def seletor_de_imagens():
     logging.debug("Dimensões em km²: %s", dimensoes)
     
     return caminhos_imagens, dimensoes
+
+def mostrar_percentual_consumo_energia(somas_ponderadas, caminhos_imagens):
+    """
+    Gera um gráfico de pizza exibindo o percentual de consumo de energia
+    para cada imagem processada.
+    
+    Args:
+        somas_ponderadas (list): Lista das somas ponderadas de cada imagem.
+        caminhos_imagens (list): Lista dos caminhos das imagens correspondentes.
+    """
+
+    # Define os rótulos e os valores
+    rótulos = [os.path.basename(caminho) for caminho in caminhos_imagens]
+    valores = somas_ponderadas
+
+    # Cria o gráfico de pizza
+    plt.figure(figsize=(8, 8))
+    plt.pie(valores, labels=rótulos, autopct='%1.1f%%', startangle=140)
+    plt.title("Percentual de Consumo de Energia por Imagem")
+    plt.axis('equal')  # Para garantir que o gráfico seja circular
+    plt.show()

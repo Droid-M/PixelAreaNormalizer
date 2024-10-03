@@ -36,7 +36,6 @@ def criar_interface(resultados, root, frame_preview):
         if somas_ponderadas:
             el.mostrar_soma_ponderada(somas_ponderadas, caminhos_imagens)
     
-    
     def on_histograma():
         if histogramas:
             el.mostrar_histogramas(histogramas, caminhos_imagens)
@@ -48,6 +47,10 @@ def criar_interface(resultados, root, frame_preview):
     def on_area_normalizada():
         if areas_normalizadas:
             el.mostrar_areas_normalizadas(areas_normalizadas, caminhos_imagens)
+            
+    def percentual_consumo_energia():
+        if somas_ponderadas:
+            el.mostrar_percentual_consumo_energia(somas_ponderadas, caminhos_imagens)
             
     extrai_resultados(resultados)
 
@@ -63,16 +66,17 @@ def criar_interface(resultados, root, frame_preview):
 
     # Botões para abrir cada representação
     tk.Button(root, text="Ver histogramas", command=on_histograma).pack(pady=10)
-    tk.Button(root, text="Ver somas ponderadas", command=on_soma_ponderada).pack(pady=10)
+    tk.Button(root, text="Ver somas ponderadas (Consumo de energia)", command=on_soma_ponderada).pack(pady=10)
     tk.Button(root, text="Ver áreas por pixel", command=on_area_por_pixel).pack(pady=10)
     tk.Button(root, text="Ver áreas normalizadas", command=on_area_normalizada).pack(pady=10)
+    tk.Button(root, text="Ver percentual de consumo energético", command=percentual_consumo_energia).pack(pady=10)
     
     # Adiciona um separador com Canvas
     separator = tk.Canvas(root, height=2, bg="black")  # Define a altura e a cor da linha
     separator.pack(fill=tk.X, padx=5, pady=10)  # Preenche a largura da janela
     
     # Adiciona botão para sair da aplicação
-    tk.Button(root, text="Sair", command=root.destroy).pack(pady=30)
+    tk.Button(root, text="Sair", command=root.destroy).pack(pady=20)
 
     root.deiconify()  # Mostra a janela principal
 

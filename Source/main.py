@@ -2,6 +2,7 @@ import tkinter as tk
 import sys
 from Back.logger import logging, configurar_logs
 from Front import main_frame
+from PIL import Image, ImageTk
 
 # Inicializa a interface gráfica
 if __name__ == "__main__":
@@ -13,6 +14,12 @@ if __name__ == "__main__":
     root.title("Selecionar Imagens")  # Defina um título para a janela
     root.geometry("800x900")  # Define o tamanho da janela
     root.update_idletasks()  # Atualiza as tarefas pendentes
+    
+    image = Image.open('/home/marcos/Documentos/GitHub/PixelAreaNormalizer/Assets/ICOs/app.ico')  # Use .png
+    photo = ImageTk.PhotoImage(image)
+
+    # Definir o ícone da janela
+    root.iconphoto(False, photo)
 
     # Centraliza a janela
     width = 800  # Largura que definimos
