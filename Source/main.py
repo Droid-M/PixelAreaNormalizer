@@ -15,7 +15,7 @@ if __name__ == "__main__":
     root.geometry("800x900")  # Define o tamanho da janela
     root.update_idletasks()  # Atualiza as tarefas pendentes
     
-    image = Image.open('/home/marcos/Documentos/GitHub/PixelAreaNormalizer/Assets/ICOs/app.ico')  # Use .png
+    image = Image.open('./Assets/ICOs/app.ico')  # Use .png
     photo = ImageTk.PhotoImage(image)
 
     # Definir o ícone da janela
