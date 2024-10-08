@@ -34,5 +34,14 @@ else
     echo "A linha já existe no arquivo de configuração."
 fi
 
-# Executa o script Python
-python3 Source/main.py
+# Caminho do executável gerado
+EXECUTABLE="./Source/build/exe.linux-x86_64-3.11/main"
+
+# Verifica se o executável existe e o executa, caso contrário, executa o script Python
+if [[ -f "$EXECUTABLE" ]]; then
+    echo "Executando o aplicativo compilado..."
+    "$EXECUTABLE"
+else
+    echo "Executável não encontrado. Executando o script Python..."
+    python3 Source/main.py
+fi
